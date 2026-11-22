@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#0f4c4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="data:,">
+<title>Medicare Cost Calculator</title>
+<style>
+:root{
+  --bg:#f4f6f5; --card:#ffffff; --card2:#eef3f1; --text:#17211f; --muted:#5b6b67; --line:#dde5e1;
+  --teal:#0f4c4a; --teal2:#14706b; --accent:#c17a1a; --accent-bg:#fdf3e0; --total-bg:#0f4c4a; --total-text:#fff;
+  --radius:16px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0e1514; --card:#18201e; --card2:#1f2a27; --text:#eef3f1; --muted:#a7b8b3; --line:#2a3632; --teal:#7fd1c8; --teal2:#7fd1c8; --accent:#e8b25a; --accent-bg:#2b2416; --total-bg:#14706b; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:680px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:28px;line-height:1.2;margin:4px 0 6px;letter-spacing:-.02em}
+.lede{color:var(--muted);font-size:15px;margin:0 0 18px}
+.langbar{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:10px}
+.langbar label{font-size:13px;color:var(--muted);font-weight:600}
+.langbar select{width:auto;min-height:40px;padding:6px 10px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.card h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--teal2);margin:0 0 10px;font-weight:700}
+.assump{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:14px}
+.assump li{display:flex;gap:8px;align-items:flex-start}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--teal2);margin-top:8px;flex-shrink:0}
+label.lbl{display:block;font-size:14px;font-weight:600;margin-bottom:8px}
+select{width:100%;min-height:48px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:16px}
+fieldset{border:0;margin:16px 0 0;padding:0}
+legend{font-size:14px;font-weight:600;margin-bottom:8px;padding:0}
+.options{display:grid;gap:8px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:12px;cursor:pointer;min-height:52px}
+.opt:has(input:checked){border-color:var(--teal2);background:var(--card2);outline:2px solid color-mix(in srgb, var(--teal2) 35%, transparent)}
+.opt input{width:20px;height:20px;margin-top:2px;accent-color:#14706b;flex-shrink:0}
+.opt b{display:block;font-size:14px;overflow-wrap:anywhere}
+.opt>span{flex:1;min-width:0}
+.opt span span{font-size:13px;color:var(--muted)}
+.totalbox{background:var(--total-bg);color:var(--total-text);border-radius:var(--radius);padding:18px 16px;margin-bottom:14px}
+.totalbox .tlabel{font-size:13px;opacity:.85}
+.total-flex{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.big{font-size:36px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.big small{font-size:15px;font-weight:600;opacity:.85}
+.year{font-size:15px;text-align:right}
+.year b{font-size:20px}
+.bar{display:flex;height:10px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.18);margin-top:14px}
+.bar i{display:block;height:100%}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{padding:11px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600}
+td.amt,th.amt{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.note{background:var(--accent-bg);border-radius:12px;padding:12px;font-size:13.5px;margin-top:12px}
+.note:empty{display:none}
+.muted{color:var(--muted);font-size:13px}
+.ref{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ref div{background:var(--card2);border-radius:12px;padding:12px}
+.ref b{display:block;font-size:18px}
+.ref span{font-size:12.5px;color:var(--muted)}
+.def{font-size:14px;background:var(--card2);border-radius:12px;padding:12px;margin-bottom:6px}
+.rule-group{margin-top:16px}
+.rule-group:first-of-type{margin-top:8px}
+.rule-group h3{font-size:15px;margin:0 0 4px;color:var(--text)}
+.rule-group .gintro{font-size:13.5px;color:var(--muted);margin:0 0 8px}
+.rule-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.rule-item{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:12px;font-size:13.5px}
+.rule-item .st{flex-shrink:0;font-weight:700;font-size:12px;background:var(--teal);color:#fff;border-radius:8px;padding:3px 8px;margin-top:1px;min-width:38px;text-align:center}
+@media (prefers-color-scheme: dark){ .rule-item .st{background:var(--teal2);color:#0e1514} }
+.rule-item .tx{min-width:0}
+.rule-item .tx b{display:block;font-size:13.5px}
+.rule-item .tx span{color:var(--muted)}
+.warn{background:var(--accent-bg);border-radius:12px;padding:12px;font-size:13.5px;margin-top:10px}
+.gnote{font-size:13.5px;color:var(--muted);margin:8px 0 0}
+.secdisc{font-size:12.5px;color:var(--muted);margin:14px 0 0;border-top:1px solid var(--line);padding-top:10px}
+footer{font-size:12.5px;color:var(--muted);line-height:1.7}
+footer a{color:var(--teal2);word-break:break-all}
+footer ul{padding-left:18px;margin:6px 0}
+button,select{min-height:44px}
+.langbar select{min-height:40px}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="langbar">
+    <label for="langSel" id="langLbl">语言 / Language</label>
+    <select id="langSel" aria-label="Language / 语言">
+      <option value="zh" selected>中文</option>
+      <option value="en">English</option>
+    </select>
+  </div>
+
+  <h1 id="ttl"></h1>
+  <p class="lede" id="lede"></p>
+
+  <section class="card">
+    <h2 id="assumpH"></h2>
+    <ul class="assump">
+      <li><span class="dot"></span><span id="a1"></span></li>
+      <li><span class="dot"></span><span id="a2"></span></li>
+      <li><span class="dot"></span><span id="a3"></span></li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <label class="lbl" for="stateSel" id="stateLbl"></label>
+    <select id="stateSel"></select>
+
+    <fieldset>
+      <legend id="comboLegend"></legend>
+      <div class="options" id="comboBox">
+        <label class="opt"><input type="radio" name="combo" value="full" checked><span><b id="cFullT"></b><span id="cFullS"></span></span></label>
+        <label class="opt"><input type="radio" name="combo" value="origD"><span><b id="cOrigDT"></b><span id="cOrigDS"></span></span></label>
+        <label class="opt"><input type="radio" name="combo" value="ma"><span><b id="cMaT"></b><span id="cMaS"></span></span></label>
+        <label class="opt"><input type="radio" name="combo" value="orig"><span><b id="cOrigT"></b><span id="cOrigS"></span></span></label>
+      </div>
+    </fieldset>
+  </section>
+
+  <section class="totalbox" aria-live="polite">
+    <div class="tlabel" id="totalLabel"></div>
+    <div class="total-flex">
+      <div class="big"><span id="totalMo">$0</span> <small id="perMo"></small></div>
+      <div class="year"><span id="perYrLbl"></span><br><b id="totalYr">$0</b></div>
+    </div>
+    <div class="bar" id="bar" aria-hidden="true"></div>
+  </section>
+
+  <section class="card">
+    <h2 id="breakH"></h2>
+    <table>
+      <thead><tr><th id="colItem"></th><th class="amt" id="colMo"></th><th class="amt" id="colYr"></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="note" id="stateNote"></div>
+    <p class="muted" id="excludeNote" style="margin-top:10px"></p>
+  </section>
+
+  <section class="card">
+    <h2 id="refH"></h2>
+    <div class="ref">
+      <div><b>$283</b><span id="ref1"></span></div>
+      <div><b>$1,736</b><span id="ref2"></span></div>
+      <div><b id="ref3b"></b><span id="ref3"></span></div>
+      <div><b id="ref4b"></b><span id="ref4"></span></div>
+    </div>
+    <p class="muted" id="refNote" style="margin:10px 0 0"></p>
+  </section>
+
+  <section class="card">
+    <h2 id="rulesH"></h2>
+    <div class="def" id="rulesDef"></div>
+    <div id="rulesBody"></div>
+    <p class="secdisc" id="rulesDisc"></p>
+  </section>
+
+  <footer>
+    <strong style="color:var(--text)" id="srcH"></strong>
+    <ul id="srcList"></ul>
+    <p id="disclaimer"></p>
+    <p id="tip"></p>
+  </footer>
+</main>
+<script>
+var LANG = "zh";
+var PART_B = 202.90;
+// [code, EN, ZH, avg_part_d, avg_ma, medigap_g, noteZh, noteEn]
+var STATES = [
+["AL","Alabama","阿拉巴马州",52.06,11.24,165,"",""],
+["AK","Alaska","阿拉斯加州",42.64,null,210,"",""],
+["AZ","Arizona","亚利桑那州",37.74,12.00,155,"",""],
+["AR","Arkansas","阿肯色州",36.88,11.16,140,"全州统一费率（Community-rated）：同计划不分年龄、同一费率。","Community-rated statewide: the same plan costs the same regardless of age."],
+["CA","California","加利福尼亚州",48.70,16.42,175,"",""],
+["CO","Colorado","科罗拉多州",41.76,13.71,150,"",""],
+["CT","Connecticut","康涅狄格州",48.56,17.66,220,"全州统一费率（Community-rated）；全年可保证承保，无需健康审查。","Community-rated; year-round guaranteed issue with no medical underwriting."],
+["DE","Delaware","特拉华州",44.95,12.66,160,"",""],
+["DC","District of Columbia","华盛顿特区",45.26,30.38,null,"Medigap 数据来源仅覆盖 50 个州，未发布华盛顿特区的数值。","The Medigap source covers only the 50 states; no value is published for DC."],
+["FL","Florida","佛罗里达州",47.88,9.41,170,"法律规定按投保年龄定价（Issue-age rated）：费率锁定在首次投保年龄，不随年龄自动上涨（仍可因通胀等调整）。","Issue-age rated by law: your premium is based on the age at first enrollment and does not rise automatically as you age (it may still adjust for inflation and other factors)."],
+["GA","Georgia","佐治亚州",46.28,14.37,155,"",""],
+["HI","Hawaii","夏威夷州",39.91,43.72,180,"",""],
+["ID","Idaho","爱达荷州",35.01,20.45,150,"",""],
+["IL","Illinois","伊利诺伊州",37.98,11.39,160,"",""],
+["IN","Indiana","印第安纳州",37.42,12.50,150,"",""],
+["IA","Iowa","爱荷华州",29.85,9.13,145,"",""],
+["KS","Kansas","堪萨斯州",32.81,6.17,150,"",""],
+["KY","Kentucky","肯塔基州",40.86,10.11,160,"",""],
+["LA","Louisiana","路易斯安那州",45.51,15.78,170,"",""],
+["ME","Maine","缅因州",45.23,11.25,200,"全州统一费率（Community-rated）：同计划不分年龄、同一费率。","Community-rated statewide: the same plan costs the same regardless of age."],
+["MD","Maryland","马里兰州",44.33,34.86,165,"",""],
+["MA","Massachusetts","马萨诸塞州",46.13,44.26,225,"非标准州：没有字母计划（无 Plan G），使用 Supplement 1 / 1A / Core 三档；全州统一费率、全年保证承保。此处 $225 为最接近 Plan G 的等价估算，不是 Plan G 本身的价格。","Non-standard state: no lettered plans (no Plan G) — it uses Supplement 1 / 1A / Core tiers instead; community-rated with year-round guaranteed issue. The $225 shown is the closest Plan G-equivalent estimate, not an actual Plan G price."],
+["MI","Michigan","密歇根州",38.23,23.38,160,"",""],
+["MN","Minnesota","明尼苏达州",34.76,70.77,190,"非标准州：没有字母计划（无 Plan G），使用 Basic / Extended Basic；全州统一费率。此处 $190 为最接近的等价估算。","Non-standard state: no lettered plans (no Plan G) — it uses Basic / Extended Basic instead; community-rated. The $190 shown is the closest equivalent estimate."],
+["MS","Mississippi","密西西比州",41.25,17.68,155,"",""],
+["MO","Missouri","密苏里州",39.46,7.67,155,"",""],
+["MT","Montana","蒙大拿州",32.74,23.06,165,"",""],
+["NE","Nebraska","内布拉斯加州",29.21,13.62,145,"",""],
+["NV","Nevada","内华达州",43.31,3.58,160,"",""],
+["NH","New Hampshire","新罕布什尔州",41.29,17.41,170,"",""],
+["NJ","New Jersey","新泽西州",47.72,14.98,215,"全州统一费率（Community-rated）：同计划不分年龄、同一费率。","Community-rated statewide: the same plan costs the same regardless of age."],
+["NM","New Mexico","新墨西哥州",38.91,11.98,155,"",""],
+["NY","New York","纽约州",57.58,26.02,250,"全州统一费率（Community-rated）；全年可保证承保，无需健康审查。","Community-rated; year-round guaranteed issue with no medical underwriting."],
+["NC","North Carolina","北卡罗来纳州",45.54,14.05,155,"",""],
+["ND","North Dakota","北达科他州",29.22,35.86,150,"",""],
+["OH","Ohio","俄亥俄州",37.06,16.03,150,"",""],
+["OK","Oklahoma","俄克拉荷马州",43.60,14.42,155,"",""],
+["OR","Oregon","俄勒冈州",35.61,33.74,165,"",""],
+["PA","Pennsylvania","宾夕法尼亚州",38.93,30.05,165,"",""],
+["RI","Rhode Island","罗德岛州",45.19,26.91,180,"",""],
+["SC","South Carolina","南卡罗来纳州",44.53,12.30,155,"",""],
+["SD","South Dakota","南达科他州",26.43,16.30,150,"",""],
+["TN","Tennessee","田纳西州",42.22,17.08,155,"",""],
+["TX","Texas","德克萨斯州（得州）",40.23,8.94,160,"",""],
+["UT","Utah","犹他州",39.61,15.77,150,"",""],
+["VT","Vermont","佛蒙特州",43.31,18.43,195,"全州统一费率（Community-rated）：同计划不分年龄、同一费率。","Community-rated statewide: the same plan costs the same regardless of age."],
+["VA","Virginia","弗吉尼亚州",39.70,12.80,155,"",""],
+["WA","Washington","华盛顿州",37.33,30.50,170,"全州统一费率（Community-rated）：同计划不分年龄、同一费率。","Community-rated statewide: the same plan costs the same regardless of age."],
+["WV","West Virginia","西弗吉尼亚州",44.71,21.05,165,"",""],
+["WI","Wisconsin","威斯康星州",37.68,27.28,155,"非标准州：没有字母计划（无 Plan G），采用基础计划 + 可选附加项（riders）的自有体系。此处 $155 为最接近的等价估算。","Non-standard state: no lettered plans (no Plan G) — it uses its own base plan plus optional riders. The $155 shown is the closest equivalent estimate."],
+["WY","Wyoming","怀俄明州",39.26,36.46,165,"",""]
+];
+
+var T = {
+zh:{
+  title:"退休医保费用估算",
+  lede:"按州估算 Part A / B / C / D 与 Medigap 的每月保费。先按标准情况算，后续版本再加入 IRMAA、领取年龄等功能。",
+  assumpH:"标准假设 · Standard",
+  a1:"<strong>已干满 40 个工作积分（40 credits）</strong> → Part A 保费为 <strong>$0</strong>",
+  a2:"<strong>Part B = 2026 年全国标准保费 $202.90 / 月</strong>，全国统一、不分州；本版不计 IRMAA 收入附加费",
+  a3:"Part B 年自付额 $283、Part A 住院自付额 $1,736 仅作参考，<strong>不计入</strong>下方保费合计",
+  stateLbl:"居住州 State",
+  comboLegend:"保障组合 Plan combination",
+  cFullT:"原始医保 + Part D + Medigap（最全）", cFullS:"Part A + Part B + Part D + Medigap Plan G",
+  cOrigDT:"原始医保 + Part D", cOrigDS:"Part A + Part B + 独立处方药计划 Part D",
+  cMaT:"Medicare Advantage（Part C）", cMaS:"Part A + Part B + Part C；Part B 保费仍需缴，处方药通常已包含",
+  cOrigT:"仅原始医保", cOrigS:"只有 Part A + Part B，无药物 / 补充保障",
+  perMo:"/ 月", perYr:"每年约",
+  totalSuffix:" · 预估合计",
+  breakH:"分项明细 · 每月保费",
+  colItem:"项目", colMo:"每月", colYr:"每年",
+  noData:"暂无公开数据",
+  excludeNote:"注：有项目暂无公开数据，已从合计中排除，因此合计偏低，选计划时请单独核实该项。",
+  notePrefix:"关于该州 Medigap：",
+  refH:"参考自付额（不计入合计）",
+  ref1:"Part B 年自付额<br>2026 deductible",
+  ref2:"Part A 住院自付额<br>每次 benefit period",
+  ref3b:"$565 / 月", ref3:"若需买入 Part A（满额）<br>无积分时的参考价",
+  ref4b:"$311 / 月", ref4:"若需买入 Part A（减额）<br>30–39 个积分时",
+  refNote:"本计算已假设 40 个积分满额，所以 Part A 按 $0 计。上面两个买入价仅供对照。",
+  itemA:"Part A — 住院保险", itemAD:"40 积分已满，保费 $0",
+  itemB:"Part B — 医疗保险", itemBD:"2026 全国标准保费",
+  itemD:"Part D — 处方药计划",
+  itemG:"Medigap — 补充保险 Plan G",
+  itemC:"Part C — Medicare Advantage",
+  rulesH:"无条件换计划规则 · Switching Without Underwriting",
+  rulesDef:"<strong>「无条件」是什么意思：</strong>换计划时保险公司<strong>不能问健康问题、不能核保拒保</strong>（no medical underwriting / no health questions）。差异最大的其实是 Medigap — Part C 和 Part D 本来就有联邦统一的免核保更换窗口（见 D 部分）。",
+  rulesDisc:"规则核实于 2026 年 11 月。各州规则变动频繁（多州在 2025–2026 年刚出新规），实际操作前请向州保险局或 SHIP（州健康保险援助计划）核实。",
+  srcH:"数据来源与年份",
+  disclaimer:"免责声明：以上为估算值，非正式报价；实际保费因具体计划、年龄、健康状况、居住邮编而异。Medigap 数字为 65 岁人群的大致平均价，不是任何一家保险公司的报价。选计划前请到 Medicare.gov Plan Compare 核对当年具体计划。",
+  tip:"小提示：在 iPhone 上点分享 →「添加到主屏幕」，即可像 App 一样打开本页。"
+},
+en:{
+  title:"Retirement Medicare Cost Estimate",
+  lede:"Estimate monthly premiums for Part A / B / C / D and Medigap by state. Standard assumptions for now; IRMAA, claiming age and more will be added in later versions.",
+  assumpH:"Standard Assumptions",
+  a1:"<strong>40 work credits earned</strong> → Part A premium is <strong>$0</strong>",
+  a2:"<strong>Part B = the 2026 national standard premium, $202.90 / month</strong> — the same in every state; this version does not include IRMAA income surcharges",
+  a3:"The Part B annual deductible ($283) and Part A hospital deductible ($1,736) are shown for reference only and are <strong>not</strong> included in the premium totals below",
+  stateLbl:"State of residence",
+  comboLegend:"Plan combination",
+  cFullT:"Original Medicare + Part D + Medigap (most complete)", cFullS:"Part A + Part B + Part D + Medigap Plan G",
+  cOrigDT:"Original Medicare + Part D", cOrigDS:"Part A + Part B + a standalone Part D drug plan",
+  cMaT:"Medicare Advantage (Part C)", cMaS:"Part A + Part B + Part C; you still pay the Part B premium, and drug coverage is usually included",
+  cOrigT:"Original Medicare only", cOrigS:"Part A + Part B only — no drug or supplemental coverage",
+  perMo:"/ mo", perYr:"About per year",
+  totalSuffix:" · Estimated total",
+  breakH:"Breakdown · Monthly Premiums",
+  colItem:"Item", colMo:"Monthly", colYr:"Yearly",
+  noData:"No public data",
+  excludeNote:"Note: an item with no public data is excluded from the total, so the total runs low — verify that item separately when choosing a plan.",
+  notePrefix:"About Medigap in this state: ",
+  refH:"Reference Deductibles (not in the total)",
+  ref1:"Part B annual deductible<br>2026",
+  ref2:"Part A hospital deductible<br>per benefit period",
+  ref3b:"$565 / mo", ref3:"Buying Part A (full rate)<br>reference price with no credits",
+  ref4b:"$311 / mo", ref4:"Buying Part A (reduced rate)<br>with 30–39 credits",
+  refNote:"This calculator assumes 40 credits, so Part A is counted as $0. The two buy-in prices above are for comparison only.",
+  itemA:"Part A — Hospital Insurance", itemAD:"40 credits earned, premium $0",
+  itemB:"Part B — Medical Insurance", itemBD:"2026 national standard premium",
+  itemD:"Part D — Prescription Drug Plan",
+  itemG:"Medigap — Supplement Plan G",
+  itemC:"Part C — Medicare Advantage",
+  rulesH:"Switching Plans Without Underwriting",
+  rulesDef:"<strong>What “unconditional” means:</strong> when you switch plans, the insurer <strong>cannot ask health questions and cannot deny you through medical underwriting</strong>. The biggest state-by-state differences are in Medigap — Part C and Part D already have federal no-underwriting switching windows (see section D).",
+  rulesDisc:"Verified November 2026. State rules change frequently (several states added new rules in 2025–2026) — confirm with your state insurance department or SHIP (State Health Insurance Assistance Program) before acting.",
+  srcH:"Sources & data years",
+  disclaimer:"Disclaimer: these are estimates, not formal quotes. Actual premiums vary by plan, age, health, and ZIP code. Medigap figures are rough averages for a 65-year-old, not any single insurer's quote. Before enrolling, check the current year's plans in Medicare.gov Plan Compare.",
+  tip:"Tip: on iPhone, tap Share → “Add to Home Screen” to open this page like an app."
+}};
+
+function itemDDesc(s){ return LANG==="zh" ? (s[2]+"独立 Part D 平均保费（2024）") : (s[1]+" average standalone Part D premium (2024)"); }
+function itemGDesc(s){
+  var nonstd = (s[0]==="MA"||s[0]==="MN"||s[0]==="WI");
+  if(LANG==="zh") return nonstd ? "该州无 Plan G，下为等价估算（65 岁）" : (s[2]+" Plan G 平均保费（65 岁估算）");
+  return nonstd ? "No Plan G in this state — equivalent estimate shown (age 65)" : (s[1]+" average Plan G premium (age-65 estimate)");
+}
+function itemCDesc(s){ return LANG==="zh" ? (s[2]+" MA 平均保费（2026）；药物通常已包含，不再单买 Part D") : (s[1]+" average MA premium (2026); drugs usually included, no separate Part D"); }
+function stateName(s){ return LANG==="zh" ? s[2] : s[1]; }
+
+// ---- Rules data: [code, nameZh, nameEn, descZh, descEn] ----
+var RULES_A = [
+["NY","纽约州","New York","全年开放报名，保险公司不得因健康状况拒保；社区费率（同一计划不分年龄、健康，同一价格）。","Year-round open enrollment — insurers cannot deny you because of your health. Community-rated (same price for the same plan regardless of age or health)."],
+["CT","康涅狄格州","Connecticut","全年开放报名，保证承保；社区费率。","Year-round open enrollment with guaranteed issue. Community-rated."],
+["MA","马萨诸塞州","Massachusetts","法规保证每年 2/1–3/31 的保证承保窗口，实务上所有保险公司全年开放；无字母计划，用 Supplement 1 / 1A / Core 三档；社区费率。","State law guarantees a Feb 1 – Mar 31 guaranteed-issue window each year, and in practice all insurers offer year-round enrollment. No lettered plans — Supplement 1 / 1A / Core instead. Community-rated."],
+["ME","缅因州","Maine","已有 Medigap 者可随时换到保障相同或更低的计划（要求断保少于 90 天）；社区费率。","Current Medigap enrollees can switch at any time to a plan with equal or lesser benefits (coverage gap must be under 90 days). Community-rated."],
+["WA","华盛顿州","Washington","已有 Medigap 者可随时换到保障相同或更低的计划（断保少于 90 天）；社区费率。注意：仅限已有 Medigap 者，从 Part C 转来不适用。","Current Medigap enrollees can switch at any time to a plan with equal or lesser benefits (gap under 90 days). Community-rated. Note: this applies only if you already have Medigap — it does not cover moving from Part C."]
+];
+var RULES_B = [
+["RI","罗德岛州","Rhode Island","2026 年起新规：每年秋季开放期（10/15–12/7），自最初报名期起持续持有 Medigap 或 Part C（断保 ≤90 天）者，可购买州内任何 Medigap、免核保，次年 1/1 生效。","New for 2026: during each fall Annual Enrollment Period (Oct 15 – Dec 7), people who have held Medigap or Part C continuously since their initial enrollment period (gap of 90 days or less) can buy any Medigap plan sold in the state with no underwriting, effective Jan 1."],
+["DE","特拉华州","Delaware","新规（部分保护）：Part C 投保人（65 岁以上）每年在 AEP（10/15–12/7）和 MA OEP（1/1–3/31）两个窗口可买 Medigap、不得拒保；但保险公司可按健康状况加费，并可设 6 个月既往症等待期。","New rule (partial protection): Medicare Advantage enrollees age 65+ can buy a Medigap plan during AEP (Oct 15 – Dec 7) and MA OEP (Jan 1 – Mar 31) each year and cannot be denied — but insurers may charge more based on health and may impose a 6-month pre-existing-condition waiting period."],
+["MN","明尼苏达州","Minnesota","2026/8/1 起新规：65–70 岁者在秋季开放期有一次性窗口，可买或换任何 Medigap、不得拒保；但保费永久加收 — 2026 年 +15%，逐年上升至 2030 年 +35%。","New from Aug 1, 2026: a one-time window during the fall open enrollment period for ages 65–70 to buy or switch any Medigap plan with no denial — but with a permanent premium surcharge: +15% in 2026, rising each year to +35% by 2030."]
+];
+var RULES_C = [
+["CA","加利福尼亚州","California","生日起 60 天内 · 任意保险公司","Within 60 days of your birthday · any insurer"],
+["OR","俄勒冈州","Oregon","生日前 30 天至生日后 30 天 · 任意保险公司","30 days before to 30 days after your birthday · any insurer"],
+["ID","爱达荷州","Idaho","生日起 63 天内 · 任意保险公司","Within 63 days of your birthday · any insurer"],
+["IL","伊利诺伊州","Illinois","生日起 45 天内 · 仅同一保险公司或其关联公司 · 仅限 65–75 岁","Within 45 days of your birthday · same insurer or an affiliate only · ages 65–75 only"],
+["NV","内华达州","Nevada","生日当月 1 日起至少 60 天 · 任意保险公司","At least 60 days starting on the 1st of your birth month · any insurer"],
+["OK","俄克拉荷马州","Oklahoma","生日起 60 天内 · 任意保险公司","Within 60 days of your birthday · any insurer"],
+["KY","肯塔基州","Kentucky","生日起 60 天内 · 仅限同一计划字母 · 任意保险公司（2024 年起）","Within 60 days of your birthday · same plan letter only · any insurer (since 2024)"],
+["MD","马里兰州","Maryland","生日当天至生日后 30 天 · 任意保险公司","From your birthday through 30 days after · any insurer"],
+["LA","路易斯安那州","Louisiana","生日起 63 天内 · 仅同一保险公司或其关联公司","Within 63 days of your birthday · same insurer or an affiliate only"],
+["VA","弗吉尼亚州","Virginia","生日起至少 60 天 · 仅限同一计划字母 · 任意保险公司（2025/7/1 起）","At least 60 days from your birthday · same plan letter only · any insurer (from Jul 1, 2025)"],
+["UT","犹他州","Utah","生日起 60 天内 · 仅同一家保险公司（2025 年起）","Within 60 days of your birthday · same insurer only (since 2025)"],
+["DE","特拉华州","Delaware","生日前 30 天至生日后 30 天 · 任意保险公司（2026/1/1 起新规）","30 days before to 30 days after your birthday · any insurer (new from Jan 1, 2026)"],
+["IN","印第安纳州","Indiana","以生日为中心约 60 天（前后各 31 天）· 仅限同一计划字母 · 任意保险公司（2026/1/1 起新规）","About 60 days centered on your birthday (31 days on each side) · same plan letter only · any insurer (new from Jan 1, 2026)"],
+["WV","西弗吉尼亚州","West Virginia","生日当月 1 日起 60 天 · 仅同一保险公司或其关联公司 · 现保单须已持有至少 24 个月（2026 年 6 月起新规）","60 days from the 1st of your birth month · same insurer or an affiliate only · your current policy must have been held at least 24 months (new from June 2026)"],
+["WY","怀俄明州","Wyoming","生日起 63 天内 · 任意保险公司（2025 年起）","Within 63 days of your birthday · any insurer (since 2025)"],
+["NM","新墨西哥州","New Mexico","生日当月 1 日起至少 60 天 · 2027/1/1 才生效，尚未启用","At least 60 days from the 1st of your birth month · takes effect Jan 1, 2027 — not yet in force"],
+["MO","密苏里州","Missouri","周年规则（不是生日）：保单周年日前 30 天至后 30 天 · 仅限同一计划字母 · 任意保险公司","Anniversary rule (not birthday-based): 30 days before to 30 days after your policy anniversary · same plan letter only · any insurer"]
+];
+var GROUPS = [
+{ id:"A", zh:"(A) Medigap — 全年随时可换", en:"(A) Medigap — Switch Any Time of Year",
+  introZh:"以下州对 65 岁以上人群实行全年保证承保（guaranteed issue）：任何时候买或换 Medigap 都不核保。",
+  introEn:"These states give people 65+ year-round guaranteed issue: you can buy or switch Medigap at any time with no underwriting.",
+  items:RULES_A,
+  noteZh:"", noteEn:"" },
+{ id:"B", zh:"(B) Medigap — 每年固定窗口（新规）", en:"(B) Medigap — New Annual Windows (Recent Rules)",
+  introZh:"以下州近年新增了每年一次的保证承保窗口，但各有附加条件，请看清 caveat：",
+  introEn:"These states recently added a once-a-year guaranteed-issue window, each with its own conditions — read the caveats:",
+  items:RULES_B,
+  noteZh:"注：伊利诺伊州的 Blue Cross Blue Shield 自愿提供全年保证承保 — 这是公司政策，不是法律规定，可能变更。",
+  noteEn:"Note: Blue Cross Blue Shield in Illinois voluntarily offers year-round guaranteed issue — that is a company policy, not a state law, and it may change." },
+{ id:"C", zh:"(C) Medigap — 生日规则 Birthday Rule", en:"(C) Medigap — Birthday Rule States",
+  introZh:"仅限已有 Medigap 保单者：在生日窗口内可换到保障相同或更低的计划，免核保。",
+  introEn:"For current Medigap policyholders only: during your birthday window you can switch to a plan with equal or lesser benefits, with no underwriting.",
+  items:RULES_C,
+  noteZh:"特别注明：德克萨斯州（TX）没有生日规则 — 更换 Medigap 除联邦保证承保权利外，一般都要核保。",
+  noteEn:"Note: Texas has no birthday rule — switching Medigap plans there generally requires underwriting, apart from federal guaranteed-issue rights." }
+];
+var GROUP_D = {
+  zh:"(D) Part C / Part D — 联邦统一规则（所有州相同）", en:"(D) Part C / Part D — Federal Rules (Same in Every State)",
+  items:[
+   {tZh:"年度开放期 AEP（每年 10/15–12/7）", tEn:"Annual Enrollment Period — AEP (Oct 15 – Dec 7 every year)",
+    dZh:"任何人可加入、更换或退出 Part C / Part D，次年 1/1 生效；从不核保、不问健康问题。",
+    dEn:"Anyone can join, switch, or drop a Part C or Part D plan, effective Jan 1. There is never underwriting or health questions."},
+   {tZh:"Part C 开放期 MA OEP（每年 1/1–3/31）", tEn:"Medicare Advantage Open Enrollment — MA OEP (Jan 1 – Mar 31 every year)",
+    dZh:"仅限已在 Part C 的人：可换另一个 Part C，或退回原始医保（可同时加入 Part D）；同样不核保。",
+    dEn:"Only for people already in a Part C plan: switch to another Part C plan, or return to Original Medicare (and add Part D). No underwriting."}
+  ],
+  warnZh:"⚠️ 关键提醒：从 Part C 退回原始医保随时可以，但之后再买 Medigap 一般要过核保 — 除非你有保证承保权利：联邦 12 个月 Part C 试用权、上面 (A) 的全年州、(C) 的生日规则，或 (B) 的 RI / DE / MN 新窗口。",
+  warnEn:"⚠️ Key warning: you can leave Part C for Original Medicare during these windows, but buying Medigap afterward usually requires underwriting — unless you have a guaranteed-issue right: the federal 12-month Medicare Advantage trial right, a year-round state in (A), a birthday rule in (C), or the new RI / DE / MN windows in (B)."
+};
+var GROUP_E = {
+  zh:"(E) Part A / Part B — 本身的规则", en:"(E) Part A / Part B — How They Work",
+  items:[
+   {tZh:"没有「更换」概念，也从不核保", tEn:"No “switching,” and never any underwriting",
+    dZh:"A/B 只有报名时间：初始报名期（65 岁生日月前后共 7 个月）、一般报名期（每年 1/1–3/31，次月生效）、特殊报名期（如离职失去雇主团体保险之后的一段时间）。",
+    dEn:"Parts A and B only have enrollment timing: the Initial Enrollment Period (7 months around your 65th birthday), the General Enrollment Period (Jan 1 – Mar 31 each year, coverage starts the month after you enroll), and Special Enrollment Periods (for example, after losing employer group coverage)."},
+   {tZh:"唯一的「条件」是迟报罚款", tEn:"The only “condition” is the late-enrollment penalty",
+    dZh:"Part B：每迟报满 12 个月，保费 +10%，终身缴纳。收费型 Part A：+10%，罚款缴纳年限为拖延年数的 2 倍。免保费 Part A 可随时补报，最多追溯 6 个月。",
+    dEn:"Part B: the premium rises 10% for each full 12-month period you delayed, and you pay it for life. Premium Part A: +10%, paid for twice the number of years you delayed. Premium-free Part A can be claimed at any time, retroactive up to 6 months."}
+  ]
+};
+var SOURCES = [
+ {zh:"Part B 保费 / 自付额（2026）：CMS — ", en:"Part B premiums & deductibles (2026): CMS — ", url:"https://www.cms.gov/newsroom/fact-sheets/2026-medicare-parts-b-premiums-deductibles"},
+ {zh:"Part D 各州平均保费（2024，KFF 按参保人数加权）：", en:"Part D average premiums by state (2024, KFF, enrollment-weighted): ", url:"https://www.kff.org/medicare/state-indicator/average-premium-for-pdps/", tailZh:" — 注意这是目前可得的州级加权均价，年份为 2024，与其他项不同", tailEn:" — note this is the latest available state-level weighted average, from 2024, unlike the other items"},
+ {zh:"Part C / Medicare Advantage 各州平均保费（2026）：", en:"Part C / Medicare Advantage average premiums by state (2026): ", url:"https://dev.medicarefaq.com/medicare101/medicare-costs/average-cost-of-medicare-advantage-plans/"},
+ {zh:"Medigap Plan G 各州平均保费（2026 估算，65 岁）：", en:"Medigap Plan G average premiums by state (2026 estimates, age 65): ", url:"https://medicarecoverguide.com/medigap-plans-by-state/"},
+ {zh:"Medigap 保证承保规则（联邦 + 各州）：KFF《Medigap Guaranteed Issue Requirements》— ", en:"Medigap guaranteed-issue rules (federal + state): KFF, “Medigap Guaranteed Issue Requirements” — ", url:"https://www.kff.org/medicare/medigap-guaranteed-issue-requirements-an-overview-of-federal-and-state-rules/"},
+ {zh:"Medicare 年度回顾与更换窗口：Medicare.gov《Your Yearly Medicare Review》— ", en:"Yearly Medicare review & switching windows: Medicare.gov, “Your Yearly Medicare Review” — ", url:"https://www.medicare.gov/pubs/pdf/11220-Medicare-Yearly-Review.pdf"},
+ {zh:"Part A / B 报名与生效时间：Medicare.gov — ", en:"Part A / B enrollment & coverage start dates: Medicare.gov — ", url:"https://www.medicare.gov/basics/get-started-with-medicare/sign-up/when-does-medicare-coverage-start"}
+];
+
+var COLORS = {a:"#8ecae6", b:"#ffd166", c:"#95d5b2", d:"#f4a261", g:"#e9c46a"};
+function fmt(n){ return "$" + n.toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2}); }
+function el(id){ return document.getElementById(id); }
+var sel = el("stateSel");
+function buildStateOptions(){
+  var cur = sel.value || "MA";
+  sel.innerHTML = "";
+  STATES.forEach(function(s){
+    var o=document.createElement("option"); o.value=s[0];
+    o.textContent = LANG==="zh" ? (s[2]+" · "+s[1]+" ("+s[0]+")") : (s[1]+" ("+s[0]+")");
+    sel.appendChild(o);
+  });
+  sel.value = cur;
+}
+function currentState(){ for(var i=0;i<STATES.length;i++) if(STATES[i][0]===sel.value) return STATES[i]; return STATES[26]; }
+
+function render(){
+  var t = T[LANG];
+  var s = currentState();
+  var combo = document.querySelector('input[name="combo"]:checked').value;
+  var items = [];
+  items.push({key:"a", name:t.itemA, desc:t.itemAD, val:0});
+  items.push({key:"b", name:t.itemB, desc:t.itemBD, val:PART_B});
+  if(combo==="full"||combo==="origD") items.push({key:"d", name:t.itemD, desc:itemDDesc(s), val:s[3]});
+  if(combo==="full") items.push({key:"g", name:t.itemG, desc:itemGDesc(s), val:s[5]});
+  if(combo==="ma") items.push({key:"c", name:t.itemC, desc:itemCDesc(s), val:s[4]});
+  var total=0, hasNull=false;
+  var rows=el("rows"); rows.innerHTML="";
+  items.forEach(function(it){
+    if(it.val===null){ hasNull=true; } else total+=it.val;
+    var tr=document.createElement("tr");
+    var nameTd=document.createElement("td");
+    nameTd.innerHTML="<strong></strong><br><span class='muted'></span>";
+    nameTd.querySelector("strong").textContent=it.name;
+    nameTd.querySelector("span").textContent=it.desc;
+    var mo=document.createElement("td"); mo.className="amt";
+    var yr=document.createElement("td"); yr.className="amt";
+    if(it.val===null){ mo.textContent=t.noData; yr.textContent="—"; }
+    else { mo.textContent=fmt(it.val); yr.textContent=fmt(it.val*12); }
+    tr.appendChild(nameTd); tr.appendChild(mo); tr.appendChild(yr); rows.appendChild(tr);
+  });
+  el("totalMo").textContent=fmt(total);
+  el("totalYr").textContent=fmt(total*12);
+  el("totalLabel").textContent = stateName(s) + (LANG==="zh" ? "（"+s[0]+"）" : " ("+s[0]+")") + t.totalSuffix;
+  var bar=el("bar"); bar.innerHTML="";
+  if(total>0) items.forEach(function(it){
+    if(it.val===null||it.val===0) return;
+    var seg=document.createElement("i"); seg.style.width=(it.val/total*100)+"%"; seg.style.background=COLORS[it.key]||"#ccc"; bar.appendChild(seg);
+  });
+  var note = LANG==="zh" ? s[6] : s[7];
+  el("stateNote").textContent = note ? (t.notePrefix + note) : "";
+  el("excludeNote").textContent = hasNull ? t.excludeNote : "";
+}
+
+function ruleItem(code, name, desc){
+  var li=document.createElement("li"); li.className="rule-item";
+  var badge=document.createElement("span"); badge.className="st"; badge.textContent=code;
+  var tx=document.createElement("span"); tx.className="tx";
+  var b=document.createElement("b"); b.textContent=name;
+  var d=document.createElement("span"); d.textContent=desc;
+  tx.appendChild(b); tx.appendChild(d); li.appendChild(badge); li.appendChild(tx);
+  return li;
+}
+function renderRules(){
+  var body=el("rulesBody"); body.innerHTML="";
+  GROUPS.forEach(function(g){
+    var div=document.createElement("div"); div.className="rule-group";
+    var h=document.createElement("h3"); h.textContent = LANG==="zh" ? g.zh : g.en; div.appendChild(h);
+    var intro = LANG==="zh" ? g.introZh : g.introEn;
+    if(intro){ var p=document.createElement("p"); p.className="gintro"; p.textContent=intro; div.appendChild(p); }
+    var ul=document.createElement("ul"); ul.className="rule-list";
+    g.items.forEach(function(it){
+      ul.appendChild(ruleItem(it[0], LANG==="zh" ? it[1] : it[2], LANG==="zh" ? it[3] : it[4]));
+    });
+    div.appendChild(ul);
+    var note = LANG==="zh" ? g.noteZh : g.noteEn;
+    if(note){ var np=document.createElement("p"); np.className="gnote"; np.textContent=note; div.appendChild(np); }
+    body.appendChild(div);
+  });
+  // D
+  var dd=document.createElement("div"); dd.className="rule-group";
+  var dh=document.createElement("h3"); dh.textContent = LANG==="zh" ? GROUP_D.zh : GROUP_D.en; dd.appendChild(dh);
+  var dul=document.createElement("ul"); dul.className="rule-list";
+  GROUP_D.items.forEach(function(it){
+    var li=document.createElement("li"); li.className="rule-item";
+    var tx=document.createElement("span"); tx.className="tx";
+    var b=document.createElement("b"); b.textContent = LANG==="zh" ? it.tZh : it.tEn;
+    var d=document.createElement("span"); d.textContent = LANG==="zh" ? it.dZh : it.dEn;
+    tx.appendChild(b); tx.appendChild(d); li.appendChild(tx); dul.appendChild(li);
+  });
+  dd.appendChild(dul);
+  var warn=document.createElement("div"); warn.className="warn"; warn.textContent = LANG==="zh" ? GROUP_D.warnZh : GROUP_D.warnEn; dd.appendChild(warn);
+  body.appendChild(dd);
+  // E
+  var ed=document.createElement("div"); ed.className="rule-group";
+  var eh=document.createElement("h3"); eh.textContent = LANG==="zh" ? GROUP_E.zh : GROUP_E.en; ed.appendChild(eh);
+  var eul=document.createElement("ul"); eul.className="rule-list";
+  GROUP_E.items.forEach(function(it){
+    var li=document.createElement("li"); li.className="rule-item";
+    var tx=document.createElement("span"); tx.className="tx";
+    var b=document.createElement("b"); b.textContent = LANG==="zh" ? it.tZh : it.tEn;
+    var d=document.createElement("span"); d.textContent = LANG==="zh" ? it.dZh : it.dEn;
+    tx.appendChild(b); tx.appendChild(d); li.appendChild(tx); eul.appendChild(li);
+  });
+  ed.appendChild(eul);
+  body.appendChild(ed);
+}
+
+function applyLang(){
+  var t=T[LANG];
+  document.documentElement.lang = LANG==="zh" ? "zh-CN" : "en";
+  el("ttl").textContent=t.title;
+  el("lede").textContent=t.lede;
+  el("assumpH").textContent=t.assumpH;
+  el("a1").innerHTML=t.a1; el("a2").innerHTML=t.a2; el("a3").innerHTML=t.a3;
+  el("stateLbl").textContent=t.stateLbl;
+  el("comboLegend").textContent=t.comboLegend;
+  el("cFullT").textContent=t.cFullT; el("cFullS").textContent=t.cFullS;
+  el("cOrigDT").textContent=t.cOrigDT; el("cOrigDS").textContent=t.cOrigDS;
+  el("cMaT").textContent=t.cMaT; el("cMaS").textContent=t.cMaS;
+  el("cOrigT").textContent=t.cOrigT; el("cOrigS").textContent=t.cOrigS;
+  el("perMo").textContent=t.perMo; el("perYrLbl").textContent=t.perYr;
+  el("breakH").textContent=t.breakH;
+  el("colItem").textContent=t.colItem; el("colMo").textContent=t.colMo; el("colYr").textContent=t.colYr;
+  el("refH").textContent=t.refH;
+  el("ref1").innerHTML=t.ref1; el("ref2").innerHTML=t.ref2;
+  el("ref3b").textContent=t.ref3b; el("ref3").innerHTML=t.ref3;
+  el("ref4b").textContent=t.ref4b; el("ref4").innerHTML=t.ref4;
+  el("refNote").textContent=t.refNote;
+  el("rulesH").textContent=t.rulesH;
+  el("rulesDef").innerHTML=t.rulesDef;
+  el("rulesDisc").textContent=t.rulesDisc;
+  el("srcH").textContent=t.srcH;
+  var sl=el("srcList"); sl.innerHTML="";
+  SOURCES.forEach(function(src){
+    var li=document.createElement("li");
+    li.appendChild(document.createTextNode(LANG==="zh" ? src.zh : src.en));
+    var a=document.createElement("a"); a.href=src.url; a.target="_blank"; a.rel="noopener"; a.textContent=src.url;
+    li.appendChild(a);
+    var tail = LANG==="zh" ? src.tailZh : src.tailEn;
+    if(tail) li.appendChild(document.createTextNode(tail));
+    sl.appendChild(li);
+  });
+  el("disclaimer").textContent=t.disclaimer;
+  el("tip").textContent=t.tip;
+  buildStateOptions();
+  renderRules();
+  render();
+}
+
+sel.addEventListener("change", render);
+el("comboBox").addEventListener("change", render);
+el("langSel").addEventListener("change", function(){ LANG = this.value; applyLang(); });
+sel.value="MA";
+applyLang();
+</script>
+</body>
+</html>
