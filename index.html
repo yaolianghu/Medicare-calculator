@@ -34,6 +34,11 @@ h1{font-size:28px;line-height:1.2;margin:4px 0 6px;letter-spacing:-.02em}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--teal2);margin-top:8px;flex-shrink:0}
 label.lbl{display:block;font-size:14px;font-weight:600;margin-bottom:8px}
 select{width:100%;min-height:48px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:16px}
+input[type=number]{width:100%;min-height:48px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:16px}
+.tierbox{margin-top:12px;background:var(--card2);border-radius:12px;padding:10px 12px;font-size:14px;font-weight:600}
+.tierbox:empty{display:none}
+.irmaa-notes{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.irmaa-notes li{display:flex;gap:8px;align-items:flex-start}
 fieldset{border:0;margin:16px 0 0;padding:0}
 legend{font-size:14px;font-weight:600;margin-bottom:8px;padding:0}
 .options{display:grid;gap:8px}
@@ -111,6 +116,19 @@ button,select{min-height:44px}
   <section class="card">
     <label class="lbl" for="stateSel" id="stateLbl"></label>
     <select id="stateSel"></select>
+
+    <label class="lbl" for="filingSel" id="filingLbl" style="margin-top:16px"></label>
+    <select id="filingSel">
+      <option value="single" id="filSingle"></option>
+      <option value="mfj" id="filMfj" selected></option>
+      <option value="mfs" id="filMfs"></option>
+    </select>
+
+    <label class="lbl" for="magiInput" id="magiLbl" style="margin-top:16px"></label>
+    <input type="number" id="magiInput" min="0" step="1000" inputmode="numeric" autocomplete="off">
+    <p class="muted" id="magiHint" style="margin:6px 0 0"></p>
+    <div class="tierbox" id="tierBox" aria-live="polite"></div>
+    <ul class="irmaa-notes" id="irmaaNotes"></ul>
 
     <fieldset>
       <legend id="comboLegend"></legend>
@@ -228,10 +246,10 @@ var STATES = [
 var T = {
 zh:{
   title:"退休医保费用估算",
-  lede:"按州估算 Part A / B / C / D 与 Medigap 的每月保费。先按标准情况算，后续版本再加入 IRMAA、领取年龄等功能。",
+  lede:"按州估算 Part A / B / C / D 与 Medigap 的每月保费，并可按收入计入 IRMAA 附加费。后续版本再加入领取年龄等功能。",
   assumpH:"标准假设 · Standard",
   a1:"<strong>已干满 40 个工作积分（40 credits）</strong> → Part A 保费为 <strong>$0</strong>",
-  a2:"<strong>Part B = 2026 年全国标准保费 $202.90 / 月</strong>，全国统一、不分州；本版不计 IRMAA 收入附加费",
+  a2:"<strong>Part B 标准保费 = 2026 年全国统一 $202.90 / 月</strong>，不分州；在下方输入 MAGI 后，将按 2026 年 IRMAA 档位自动加上收入附加费",
   a3:"Part B 年自付额 $283、Part A 住院自付额 $1,736 仅作参考，<strong>不计入</strong>下方保费合计",
   stateLbl:"居住州 State",
   comboLegend:"保障组合 Plan combination",
@@ -257,6 +275,18 @@ zh:{
   itemD:"Part D — 处方药计划",
   itemG:"Medigap — 补充保险 Plan G",
   itemC:"Part C — Medicare Advantage",
+  filingLbl:"申报身份 Filing status",
+  filSingle:"单身 Single",
+  filMfj:"夫妻合并申报 Married filing jointly (MFJ)",
+  filMfs:"夫妻分开申报 Married filing separately (MFS)",
+  magiLbl:"MAGI（调整后总收入）",
+  magiHint:"MAGI = AGI + 免税利息（tax-exempt interest）。留空或填 0 = 无 IRMAA，按标准保费计算。",
+  tierNone:"未输入 MAGI — 按标准保费计算",
+  tierStandard:"无 IRMAA 附加（标准保费）",
+  tierPrefix:"IRMAA 档位：",
+  itemIRMAA:"Part D IRMAA — 收入附加费",
+  itemIRMAAD:"有药物保障时按 MAGI 档位加收",
+  irmaaNotes:["IRMAA 按两年前的 MAGI 定档：2026 年保费看 2024 年收入。","档位是悬崖式的：MAGI 超过门槛 $1，该档附加费全部生效。","本表为 2026 年档位；门槛会随通胀逐年调整。"],
   rulesH:"无条件换计划规则 · Switching Without Underwriting",
   rulesDef:"<strong>「无条件」是什么意思：</strong>换计划时保险公司<strong>不能问健康问题、不能核保拒保</strong>（no medical underwriting / no health questions）。差异最大的其实是 Medigap — Part C 和 Part D 本来就有联邦统一的免核保更换窗口（见 D 部分）。",
   rulesDisc:"规则核实于 2026 年 11 月。各州规则变动频繁（多州在 2025–2026 年刚出新规），实际操作前请向州保险局或 SHIP（州健康保险援助计划）核实。",
@@ -266,10 +296,10 @@ zh:{
 },
 en:{
   title:"Retirement Medicare Cost Estimate",
-  lede:"Estimate monthly premiums for Part A / B / C / D and Medigap by state. Standard assumptions for now; IRMAA, claiming age and more will be added in later versions.",
+  lede:"Estimate monthly premiums for Part A / B / C / D and Medigap by state, with IRMAA income surcharges applied when you enter your MAGI. Claiming age and more will be added in later versions.",
   assumpH:"Standard Assumptions",
   a1:"<strong>40 work credits earned</strong> → Part A premium is <strong>$0</strong>",
-  a2:"<strong>Part B = the 2026 national standard premium, $202.90 / month</strong> — the same in every state; this version does not include IRMAA income surcharges",
+  a2:"<strong>Part B standard premium = $202.90 / month in 2026</strong> — the same in every state; enter your MAGI below and the 2026 IRMAA surcharge for your tier is added automatically",
   a3:"The Part B annual deductible ($283) and Part A hospital deductible ($1,736) are shown for reference only and are <strong>not</strong> included in the premium totals below",
   stateLbl:"State of residence",
   comboLegend:"Plan combination",
@@ -295,6 +325,18 @@ en:{
   itemD:"Part D — Prescription Drug Plan",
   itemG:"Medigap — Supplement Plan G",
   itemC:"Part C — Medicare Advantage",
+  filingLbl:"Filing status",
+  filSingle:"Single",
+  filMfj:"Married filing jointly (MFJ)",
+  filMfs:"Married filing separately (MFS)",
+  magiLbl:"MAGI (modified adjusted gross income)",
+  magiHint:"MAGI = AGI + tax-exempt interest. Leave blank or 0 for no IRMAA (standard premiums).",
+  tierNone:"No MAGI entered — standard premiums",
+  tierStandard:"No IRMAA (standard premium)",
+  tierPrefix:"IRMAA tier: ",
+  itemIRMAA:"Part D IRMAA — income surcharge",
+  itemIRMAAD:"Added by MAGI tier when you have drug coverage",
+  irmaaNotes:["IRMAA tiers are set by MAGI from two years earlier: 2026 premiums are based on 2024 MAGI (2-year lookback).","The brackets are cliffs: $1 over a threshold triggers the full surcharge for that tier.","This is the 2026 table; thresholds are inflation-adjusted over time."],
   rulesH:"Switching Plans Without Underwriting",
   rulesDef:"<strong>What “unconditional” means:</strong> when you switch plans, the insurer <strong>cannot ask health questions and cannot deny you through medical underwriting</strong>. The biggest state-by-state differences are in Medigap — Part C and Part D already have federal no-underwriting switching windows (see section D).",
   rulesDisc:"Verified November 2026. State rules change frequently (several states added new rules in 2025–2026) — confirm with your state insurance department or SHIP (State Health Insurance Assistance Program) before acting.",
@@ -389,6 +431,7 @@ var GROUP_E = {
 };
 var SOURCES = [
  {zh:"Part B 保费 / 自付额（2026）：CMS — ", en:"Part B premiums & deductibles (2026): CMS — ", url:"https://www.cms.gov/newsroom/fact-sheets/2026-medicare-parts-b-premiums-deductibles"},
+ {zh:"IRMAA 收入附加费档位表（2026，含 Part B 总保费与 Part D 附加费）：CMS《2026 Medicare Parts A & B premiums and deductibles》— ", en:"IRMAA income surcharges by tier (2026 — total Part B premiums & Part D add-ons): CMS, “2026 Medicare Parts A & B premiums and deductibles” — ", url:"https://www.cms.gov/newsroom/fact-sheets/2026-medicare-parts-b-premiums-deductibles"},
  {zh:"Part D 各州平均保费（2024，KFF 按参保人数加权）：", en:"Part D average premiums by state (2024, KFF, enrollment-weighted): ", url:"https://www.kff.org/medicare/state-indicator/average-premium-for-pdps/", tailZh:" — 注意这是目前可得的州级加权均价，年份为 2024，与其他项不同", tailEn:" — note this is the latest available state-level weighted average, from 2024, unlike the other items"},
  {zh:"Part C / Medicare Advantage 各州平均保费（2026）：", en:"Part C / Medicare Advantage average premiums by state (2026): ", url:"https://dev.medicarefaq.com/medicare101/medicare-costs/average-cost-of-medicare-advantage-plans/"},
  {zh:"Medigap Plan G 各州平均保费（2026 估算，65 岁）：", en:"Medigap Plan G average premiums by state (2026 estimates, age 65): ", url:"https://medicarecoverguide.com/medigap-plans-by-state/"},
@@ -397,7 +440,36 @@ var SOURCES = [
  {zh:"Part A / B 报名与生效时间：Medicare.gov — ", en:"Part A / B enrollment & coverage start dates: Medicare.gov — ", url:"https://www.medicare.gov/basics/get-started-with-medicare/sign-up/when-does-medicare-coverage-start"}
 ];
 
-var COLORS = {a:"#8ecae6", b:"#ffd166", c:"#95d5b2", d:"#f4a261", g:"#e9c46a"};
+// 2026 IRMAA tiers (CMS). b = TOTAL monthly Part B premium; d = monthly Part D add-on.
+var IRMAA = {
+  single:{label:"Single", tiers:[
+    {max:109000, b:202.90, d:0, range:"≤$109,000"},
+    {max:137000, b:284.10, d:14.50, range:"$109,001–$137,000"},
+    {max:171000, b:405.80, d:37.50, range:"$137,001–$171,000"},
+    {max:205000, b:527.50, d:60.40, range:"$171,001–$205,000"},
+    {max:499999, b:649.20, d:83.30, range:"$205,001–$499,999"},
+    {max:Infinity, b:689.90, d:91.00, range:"≥$500,000"}]},
+  mfj:{label:"MFJ", tiers:[
+    {max:218000, b:202.90, d:0, range:"≤$218,000"},
+    {max:274000, b:284.10, d:14.50, range:"$218,001–$274,000"},
+    {max:342000, b:405.80, d:37.50, range:"$274,001–$342,000"},
+    {max:410000, b:527.50, d:60.40, range:"$342,001–$410,000"},
+    {max:749999, b:649.20, d:83.30, range:"$410,001–$749,999"},
+    {max:Infinity, b:689.90, d:91.00, range:"≥$750,000"}]},
+  mfs:{label:"MFS", tiers:[
+    {max:109000, b:202.90, d:0, range:"≤$109,000"},
+    {max:390999, b:649.20, d:83.30, range:"$109,001–$390,999"},
+    {max:Infinity, b:689.90, d:91.00, range:"≥$391,000"}]}
+};
+function getMagi(){ var v=parseFloat(el("magiInput").value); return (isNaN(v)||v<0)?0:v; }
+function irmaaTier(){
+  var st=el("filingSel").value; var magi=getMagi(); var tiers=IRMAA[st].tiers;
+  for(var i=0;i<tiers.length;i++) if(magi<=tiers[i].max) return {status:st, tier:tiers[i]};
+  return {status:st, tier:tiers[tiers.length-1]};
+}
+function bDesc(ir){ var sur=ir.tier.b-PART_B; return LANG==="zh" ? ("2026 标准保费 $202.90，含 IRMAA 附加 "+fmt(sur)) : ("2026 standard $202.90, incl. IRMAA surcharge "+fmt(sur)); }
+
+var COLORS = {a:"#8ecae6", b:"#ffd166", c:"#95d5b2", d:"#f4a261", g:"#e9c46a", irmaa:"#d1603d"};
 function fmt(n){ return "$" + n.toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2}); }
 function el(id){ return document.getElementById(id); }
 var sel = el("stateSel");
@@ -417,12 +489,15 @@ function render(){
   var t = T[LANG];
   var s = currentState();
   var combo = document.querySelector('input[name="combo"]:checked').value;
+  var ir = irmaaTier();
+  var bSur = ir.tier.b - PART_B;
   var items = [];
   items.push({key:"a", name:t.itemA, desc:t.itemAD, val:0});
-  items.push({key:"b", name:t.itemB, desc:t.itemBD, val:PART_B});
+  items.push({key:"b", name:t.itemB, desc: bSur>0 ? bDesc(ir) : t.itemBD, val:ir.tier.b});
   if(combo==="full"||combo==="origD") items.push({key:"d", name:t.itemD, desc:itemDDesc(s), val:s[3]});
   if(combo==="full") items.push({key:"g", name:t.itemG, desc:itemGDesc(s), val:s[5]});
   if(combo==="ma") items.push({key:"c", name:t.itemC, desc:itemCDesc(s), val:s[4]});
+  if(ir.tier.d>0 && combo!=="orig") items.push({key:"irmaa", name:t.itemIRMAA, desc:t.itemIRMAAD, val:ir.tier.d});
   var total=0, hasNull=false;
   var rows=el("rows"); rows.innerHTML="";
   items.forEach(function(it){
@@ -449,6 +524,10 @@ function render(){
   var note = LANG==="zh" ? s[6] : s[7];
   el("stateNote").textContent = note ? (t.notePrefix + note) : "";
   el("excludeNote").textContent = hasNull ? t.excludeNote : "";
+  var tb=el("tierBox");
+  if(!el("magiInput").value){ tb.textContent=t.tierNone; }
+  else if(bSur===0 && ir.tier.d===0){ tb.textContent=t.tierStandard; }
+  else { tb.textContent = t.tierPrefix + IRMAA[ir.status].label + " " + ir.tier.range; }
 }
 
 function ruleItem(code, name, desc){
@@ -513,6 +592,19 @@ function applyLang(){
   el("assumpH").textContent=t.assumpH;
   el("a1").innerHTML=t.a1; el("a2").innerHTML=t.a2; el("a3").innerHTML=t.a3;
   el("stateLbl").textContent=t.stateLbl;
+  el("filingLbl").textContent=t.filingLbl;
+  el("filSingle").textContent=t.filSingle;
+  el("filMfj").textContent=t.filMfj;
+  el("filMfs").textContent=t.filMfs;
+  el("magiLbl").textContent=t.magiLbl;
+  el("magiHint").textContent=t.magiHint;
+  var inEl=el("irmaaNotes"); inEl.innerHTML="";
+  t.irmaaNotes.forEach(function(n){
+    var li=document.createElement("li");
+    var d=document.createElement("span"); d.className="dot";
+    var tx=document.createElement("span"); tx.textContent=n;
+    li.appendChild(d); li.appendChild(tx); inEl.appendChild(li);
+  });
   el("comboLegend").textContent=t.comboLegend;
   el("cFullT").textContent=t.cFullT; el("cFullS").textContent=t.cFullS;
   el("cOrigDT").textContent=t.cOrigDT; el("cOrigDS").textContent=t.cOrigDS;
@@ -548,6 +640,8 @@ function applyLang(){
 }
 
 sel.addEventListener("change", render);
+el("filingSel").addEventListener("change", render);
+el("magiInput").addEventListener("input", render);
 el("comboBox").addEventListener("change", render);
 el("langSel").addEventListener("change", function(){ LANG = this.value; applyLang(); });
 sel.value="MA";

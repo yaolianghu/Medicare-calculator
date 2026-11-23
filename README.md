@@ -12,6 +12,9 @@ Open `index.html` in any browser — no build step, no server needed. It can als
   3. Medicare Advantage (Part C)
   4. Original Medicare only
 - Shows the monthly and annual total for each part, with deductibles listed for reference.
+- **IRMAA (2026):** enter filing status (single / MFJ / MFS) and MAGI, and Part B shows the
+  income-tier total premium while the Part D surcharge is added wherever drug coverage applies.
+  Brackets are cliffs based on MAGI from two years prior (CMS 2026 table).
 - **Bilingual UI** — a dropdown at the top switches the entire interface between 中文 and English.
 - **"Switching plans without underwriting" reference section:** which states let you change
   Medigap plans with no health questions — year-round guaranteed-issue states (NY, CT, MA, ME, WA),
