@@ -16,6 +16,9 @@ Open `index.html` in any browser — no build step, no server needed. It can als
   income-tier total premium while the Part D surcharge is added wherever drug coverage applies.
   Brackets are cliffs based on MAGI from two years prior (CMS 2026 table).
 - **Bilingual UI** — a dropdown at the top switches the entire interface between 中文 and English.
+- **Social Security estimate:** enter the estimated monthly benefit at full retirement age (PIA)
+  and see the amount for every claiming age 62–70 (statutory early-claim reductions and
+  delayed-retirement credits; FRA 67 for those born in 1960 or later).
 - **"Switching plans without underwriting" reference section:** which states let you change
   Medigap plans with no health questions — year-round guaranteed-issue states (NY, CT, MA, ME, WA),
   states with annual guaranteed-issue windows (RI, DE, MN), birthday-rule states, the federal

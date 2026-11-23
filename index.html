@@ -62,6 +62,11 @@ th,td{padding:11px 4px;border-bottom:1px solid var(--line);text-align:left;verti
 th{font-size:12px;color:var(--muted);font-weight:600}
 td.amt,th.amt{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 tr:last-child td{border-bottom:0}
+tr.ss-fra td{background:var(--card2);font-weight:600}
+tr.ss-max td{background:var(--accent-bg);font-weight:600}
+.ss-tag{font-size:11px;font-weight:700;color:var(--teal2);white-space:nowrap}
+.ss-notes{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.ss-notes li{display:flex;gap:8px;align-items:flex-start}
 .note{background:var(--accent-bg);border-radius:12px;padding:12px;font-size:13.5px;margin-top:12px}
 .note:empty{display:none}
 .muted{color:var(--muted);font-size:13px}
@@ -172,6 +177,18 @@ button,select{min-height:44px}
   </section>
 
   <section class="card">
+    <h2 id="ssH"></h2>
+    <label class="lbl" for="piaInput" id="ssLbl"></label>
+    <input type="number" id="piaInput" min="0" step="50" value="3000" inputmode="numeric" autocomplete="off">
+    <p class="muted" id="ssHint" style="margin:6px 0 0"></p>
+    <table style="margin-top:12px">
+      <thead><tr><th id="ssColAge"></th><th class="amt" id="ssColPct"></th><th class="amt" id="ssColMo"></th><th class="amt" id="ssColYr"></th></tr></thead>
+      <tbody id="ssRows"></tbody>
+    </table>
+    <ul class="ss-notes" id="ssNotes"></ul>
+  </section>
+
+  <section class="card">
     <h2 id="rulesH"></h2>
     <div class="def" id="rulesDef"></div>
     <div id="rulesBody"></div>
@@ -246,7 +263,7 @@ var STATES = [
 var T = {
 zh:{
   title:"退休医保费用估算",
-  lede:"按州估算 Part A / B / C / D 与 Medigap 的每月保费，并可按收入计入 IRMAA 附加费。后续版本再加入领取年龄等功能。",
+  lede:"按州估算 Part A / B / C / D 与 Medigap 的每月保费，并可按收入计入 IRMAA 附加费；下方另有社保金估算，列出 62–70 岁不同领取年龄的收入。",
   assumpH:"标准假设 · Standard",
   a1:"<strong>已干满 40 个工作积分（40 credits）</strong> → Part A 保费为 <strong>$0</strong>",
   a2:"<strong>Part B 标准保费 = 2026 年全国统一 $202.90 / 月</strong>，不分州；在下方输入 MAGI 后，将按 2026 年 IRMAA 档位自动加上收入附加费",
@@ -287,6 +304,12 @@ zh:{
   itemIRMAA:"Part D IRMAA — 收入附加费",
   itemIRMAAD:"有药物保障时按 MAGI 档位加收",
   irmaaNotes:["IRMAA 按两年前的 MAGI 定档：2026 年保费看 2024 年收入。","档位是悬崖式的：MAGI 超过门槛 $1，该档附加费全部生效。","本表为 2026 年档位；门槛会随通胀逐年调整。"],
+  ssH:"社保金估算 · Social Security Estimate",
+  ssLbl:"预计 67 岁全额月领额 (PIA)",
+  ssHint:"示例金额 $3,000，请替换为你 SSA 账户里的数字（ssa.gov 对账单上的 67 岁预估额）。",
+  ssColAge:"领取年龄", ssColPct:"占 PIA 比例", ssColMo:"每月", ssColYr:"每年",
+  ssFraTag:"完全退休年龄", ssMaxTag:"最高",
+  ssNotes:["适用于 1960 年或之后出生者，完全退休年龄 (FRA) 为 67 岁。","提前领取是永久性减额；推迟到 70 岁后不再增加。","金额为今日美元、未计 COLA 生活成本调整；不含配偶 / 遗属福利，社保金可能需要缴税。","你自己的准确 PIA 可在 ssa.gov 账户的对账单里查到。"],
   rulesH:"无条件换计划规则 · Switching Without Underwriting",
   rulesDef:"<strong>「无条件」是什么意思：</strong>换计划时保险公司<strong>不能问健康问题、不能核保拒保</strong>（no medical underwriting / no health questions）。差异最大的其实是 Medigap — Part C 和 Part D 本来就有联邦统一的免核保更换窗口（见 D 部分）。",
   rulesDisc:"规则核实于 2026 年 11 月。各州规则变动频繁（多州在 2025–2026 年刚出新规），实际操作前请向州保险局或 SHIP（州健康保险援助计划）核实。",
@@ -296,7 +319,7 @@ zh:{
 },
 en:{
   title:"Retirement Medicare Cost Estimate",
-  lede:"Estimate monthly premiums for Part A / B / C / D and Medigap by state, with IRMAA income surcharges applied when you enter your MAGI. Claiming age and more will be added in later versions.",
+  lede:"Estimate monthly premiums for Part A / B / C / D and Medigap by state, with IRMAA income surcharges applied when you enter your MAGI. A Social Security estimate below shows benefits at claiming ages 62–70.",
   assumpH:"Standard Assumptions",
   a1:"<strong>40 work credits earned</strong> → Part A premium is <strong>$0</strong>",
   a2:"<strong>Part B standard premium = $202.90 / month in 2026</strong> — the same in every state; enter your MAGI below and the 2026 IRMAA surcharge for your tier is added automatically",
@@ -337,6 +360,12 @@ en:{
   itemIRMAA:"Part D IRMAA — income surcharge",
   itemIRMAAD:"Added by MAGI tier when you have drug coverage",
   irmaaNotes:["IRMAA tiers are set by MAGI from two years earlier: 2026 premiums are based on 2024 MAGI (2-year lookback).","The brackets are cliffs: $1 over a threshold triggers the full surcharge for that tier.","This is the 2026 table; thresholds are inflation-adjusted over time."],
+  ssH:"Social Security Estimate",
+  ssLbl:"Estimated monthly benefit at full retirement age (67) — PIA",
+  ssHint:"Example amount ($3,000) — replace with the PIA from your SSA statement.",
+  ssColAge:"Claiming age", ssColPct:"% of PIA", ssColMo:"Monthly", ssColYr:"Annual",
+  ssFraTag:"Full retirement age", ssMaxTag:"Maximum",
+  ssNotes:["Applies to people born in 1960 or later; full retirement age (FRA) is 67.","Early claiming permanently reduces the benefit; there is no increase for delaying past 70.","Amounts are in today's dollars, before COLA adjustments; spousal and survivor benefits are not included, and benefits may be taxable.","Find your own PIA estimate in your ssa.gov account statement."],
   rulesH:"Switching Plans Without Underwriting",
   rulesDef:"<strong>What “unconditional” means:</strong> when you switch plans, the insurer <strong>cannot ask health questions and cannot deny you through medical underwriting</strong>. The biggest state-by-state differences are in Medigap — Part C and Part D already have federal no-underwriting switching windows (see section D).",
   rulesDisc:"Verified November 2026. State rules change frequently (several states added new rules in 2025–2026) — confirm with your state insurance department or SHIP (State Health Insurance Assistance Program) before acting.",
@@ -437,7 +466,9 @@ var SOURCES = [
  {zh:"Medigap Plan G 各州平均保费（2026 估算，65 岁）：", en:"Medigap Plan G average premiums by state (2026 estimates, age 65): ", url:"https://medicarecoverguide.com/medigap-plans-by-state/"},
  {zh:"Medigap 保证承保规则（联邦 + 各州）：KFF《Medigap Guaranteed Issue Requirements》— ", en:"Medigap guaranteed-issue rules (federal + state): KFF, “Medigap Guaranteed Issue Requirements” — ", url:"https://www.kff.org/medicare/medigap-guaranteed-issue-requirements-an-overview-of-federal-and-state-rules/"},
  {zh:"Medicare 年度回顾与更换窗口：Medicare.gov《Your Yearly Medicare Review》— ", en:"Yearly Medicare review & switching windows: Medicare.gov, “Your Yearly Medicare Review” — ", url:"https://www.medicare.gov/pubs/pdf/11220-Medicare-Yearly-Review.pdf"},
- {zh:"Part A / B 报名与生效时间：Medicare.gov — ", en:"Part A / B enrollment & coverage start dates: Medicare.gov — ", url:"https://www.medicare.gov/basics/get-started-with-medicare/sign-up/when-does-medicare-coverage-start"}
+ {zh:"Part A / B 报名与生效时间：Medicare.gov — ", en:"Part A / B enrollment & coverage start dates: Medicare.gov — ", url:"https://www.medicare.gov/basics/get-started-with-medicare/sign-up/when-does-medicare-coverage-start"},
+ {zh:"社保金提前领取减额（SSA）：", en:"Social Security early-retirement reductions (SSA): ", url:"https://www.ssa.gov/benefits/retirement/planner/agereduction.html"},
+ {zh:"社保金延迟领取加额（SSA）：", en:"Social Security delayed retirement credits (SSA): ", url:"https://www.ssa.gov/benefits/retirement/planner/delayret.html"}
 ];
 
 // 2026 IRMAA tiers (CMS). b = TOTAL monthly Part B premium; d = monthly Part D add-on.
@@ -468,6 +499,42 @@ function irmaaTier(){
   return {status:st, tier:tiers[tiers.length-1]};
 }
 function bDesc(ir){ var sur=ir.tier.b-PART_B; return LANG==="zh" ? ("2026 标准保费 $202.90，含 IRMAA 附加 "+fmt(sur)) : ("2026 standard $202.90, incl. IRMAA surcharge "+fmt(sur)); }
+
+// Social Security: FRA = 67 (born 1960+). Statutory reduction / delayed credits.
+function ssFactor(age){
+  if(age<67){
+    var m=(67-age)*12;
+    var red=Math.min(m,36)*(5/9)/100 + Math.max(0,m-36)*(5/12)/100;
+    return 1-red;
+  }
+  return 1 + (age-67)*(2/3)/100*12;
+}
+function renderSS(){
+  var t=T[LANG];
+  var pia=parseFloat(el("piaInput").value);
+  if(isNaN(pia)||pia<0) pia=0;
+  var rows=el("ssRows"); rows.innerHTML="";
+  for(var age=62; age<=70; age++){
+    var f=ssFactor(age);
+    var mo=pia*f;
+    var tr=document.createElement("tr");
+    if(age===67) tr.className="ss-fra";
+    if(age===70) tr.className="ss-max";
+    var ageTd=document.createElement("td");
+    ageTd.textContent=String(age);
+    if(age===67||age===70){
+      var tag=document.createElement("span"); tag.className="ss-tag";
+      tag.textContent=" · "+(age===67?t.ssFraTag:t.ssMaxTag);
+      ageTd.appendChild(tag);
+    }
+    var pct=document.createElement("td"); pct.className="amt";
+    pct.textContent=(f*100).toFixed(2)+"%";
+    var moTd=document.createElement("td"); moTd.className="amt"; moTd.textContent=fmt(mo);
+    var yrTd=document.createElement("td"); yrTd.className="amt"; yrTd.textContent=fmt(mo*12);
+    tr.appendChild(ageTd); tr.appendChild(pct); tr.appendChild(moTd); tr.appendChild(yrTd);
+    rows.appendChild(tr);
+  }
+}
 
 var COLORS = {a:"#8ecae6", b:"#ffd166", c:"#95d5b2", d:"#f4a261", g:"#e9c46a", irmaa:"#d1603d"};
 function fmt(n){ return "$" + n.toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2}); }
@@ -528,6 +595,7 @@ function render(){
   if(!el("magiInput").value){ tb.textContent=t.tierNone; }
   else if(bSur===0 && ir.tier.d===0){ tb.textContent=t.tierStandard; }
   else { tb.textContent = t.tierPrefix + IRMAA[ir.status].label + " " + ir.tier.range; }
+  renderSS();
 }
 
 function ruleItem(code, name, desc){
@@ -618,6 +686,18 @@ function applyLang(){
   el("ref3b").textContent=t.ref3b; el("ref3").innerHTML=t.ref3;
   el("ref4b").textContent=t.ref4b; el("ref4").innerHTML=t.ref4;
   el("refNote").textContent=t.refNote;
+  el("ssH").textContent=t.ssH;
+  el("ssLbl").textContent=t.ssLbl;
+  el("ssHint").textContent=t.ssHint;
+  el("ssColAge").textContent=t.ssColAge; el("ssColPct").textContent=t.ssColPct;
+  el("ssColMo").textContent=t.ssColMo; el("ssColYr").textContent=t.ssColYr;
+  var snEl=el("ssNotes"); snEl.innerHTML="";
+  t.ssNotes.forEach(function(n){
+    var li=document.createElement("li");
+    var d=document.createElement("span"); d.className="dot";
+    var tx=document.createElement("span"); tx.textContent=n;
+    li.appendChild(d); li.appendChild(tx); snEl.appendChild(li);
+  });
   el("rulesH").textContent=t.rulesH;
   el("rulesDef").innerHTML=t.rulesDef;
   el("rulesDisc").textContent=t.rulesDisc;
@@ -642,6 +722,7 @@ function applyLang(){
 sel.addEventListener("change", render);
 el("filingSel").addEventListener("change", render);
 el("magiInput").addEventListener("input", render);
+el("piaInput").addEventListener("input", renderSS);
 el("comboBox").addEventListener("change", render);
 el("langSel").addEventListener("change", function(){ LANG = this.value; applyLang(); });
 sel.value="MA";
