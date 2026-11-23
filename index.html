@@ -189,6 +189,24 @@ button,select{min-height:44px}
   </section>
 
   <section class="card">
+    <h2 id="infH"></h2>
+    <label class="lbl" for="infYear" id="infYearLbl"></label>
+    <input type="number" id="infYear" min="2026" step="1" value="2047" inputmode="numeric" autocomplete="off">
+    <label class="lbl" for="infRate" id="infRateLbl" style="margin-top:16px"></label>
+    <input type="number" id="infRate" min="0" step="0.1" value="5" inputmode="decimal" autocomplete="off">
+    <div class="tierbox" id="infFactor" aria-live="polite"></div>
+    <table style="margin-top:12px">
+      <thead><tr><th id="infColItem"></th><th class="amt" id="infColMo"></th><th class="amt" id="infColYr"></th></tr></thead>
+      <tbody id="infRows"></tbody>
+    </table>
+    <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap">
+      <div><span class="muted" id="infTotalLbl"></span><br><b style="font-size:26px;letter-spacing:-.02em" id="infTotalMo">$0</b> <span class="muted" id="infPerMo"></span></div>
+      <div class="year"><span id="infPerYrLbl"></span><br><b id="infTotalYr">$0</b></div>
+    </div>
+    <ul class="ss-notes" id="infNotes"></ul>
+  </section>
+
+  <section class="card">
     <h2 id="rulesH"></h2>
     <div class="def" id="rulesDef"></div>
     <div id="rulesBody"></div>
@@ -263,7 +281,7 @@ var STATES = [
 var T = {
 zh:{
   title:"退休医保费用估算",
-  lede:"按州估算 Part A / B / C / D 与 Medigap 的每月保费，并可按收入计入 IRMAA 附加费；下方另有社保金估算，列出 62–70 岁不同领取年龄的收入。",
+  lede:"按州估算 Part A / B / C / D 与 Medigap 的每月保费，并可按收入计入 IRMAA 附加费；下方另有社保金估算，列出 62–70 岁不同领取年龄的收入，并可按通胀率把保费推演到目标年份。",
   assumpH:"标准假设 · Standard",
   a1:"<strong>已干满 40 个工作积分（40 credits）</strong> → Part A 保费为 <strong>$0</strong>",
   a2:"<strong>Part B 标准保费 = 2026 年全国统一 $202.90 / 月</strong>，不分州；在下方输入 MAGI 后，将按 2026 年 IRMAA 档位自动加上收入附加费",
@@ -310,6 +328,14 @@ zh:{
   ssColAge:"领取年龄", ssColPct:"占 PIA 比例", ssColMo:"每月", ssColYr:"每年",
   ssFraTag:"完全退休年龄", ssMaxTag:"最高",
   ssNotes:["适用于 1960 年或之后出生者，完全退休年龄 (FRA) 为 67 岁。","提前领取是永久性减额；推迟到 70 岁后不再增加。","金额为今日美元、未计 COLA 生活成本调整；不含配偶 / 遗属福利，社保金可能需要缴税。","你自己的准确 PIA 可在 ssa.gov 账户的对账单里查到。"],
+  infH:"通胀推演 · Inflation Projection",
+  infYearLbl:"目标年份 Target year",
+  infRateLbl:"年增长率（%）Annual growth rate",
+  infFactorPrefix:"推演系数：× ",
+  infFactorMid:"（",
+  infFactorYears:" 年）",
+  infTotalLbl:"推演合计（上方所选州与组合）",
+  infNotes:["简化假设：所有保费按同一年增长率推演；IRMAA 档位门槛未同步推演，实际各部分涨幅不同。","历史参考：Part B 保费长期年均涨幅约 5–6%。","自付额（deductible）不做推演，仍按当前年份参考值。","这是推演，不是预测。"],
   rulesH:"无条件换计划规则 · Switching Without Underwriting",
   rulesDef:"<strong>「无条件」是什么意思：</strong>换计划时保险公司<strong>不能问健康问题、不能核保拒保</strong>（no medical underwriting / no health questions）。差异最大的其实是 Medigap — Part C 和 Part D 本来就有联邦统一的免核保更换窗口（见 D 部分）。",
   rulesDisc:"规则核实于 2026 年 11 月。各州规则变动频繁（多州在 2025–2026 年刚出新规），实际操作前请向州保险局或 SHIP（州健康保险援助计划）核实。",
@@ -319,7 +345,7 @@ zh:{
 },
 en:{
   title:"Retirement Medicare Cost Estimate",
-  lede:"Estimate monthly premiums for Part A / B / C / D and Medigap by state, with IRMAA income surcharges applied when you enter your MAGI. A Social Security estimate below shows benefits at claiming ages 62–70.",
+  lede:"Estimate monthly premiums for Part A / B / C / D and Medigap by state, with IRMAA income surcharges applied when you enter your MAGI. A Social Security estimate below shows benefits at claiming ages 62–70, and an inflation projection carries premiums forward to a target year.",
   assumpH:"Standard Assumptions",
   a1:"<strong>40 work credits earned</strong> → Part A premium is <strong>$0</strong>",
   a2:"<strong>Part B standard premium = $202.90 / month in 2026</strong> — the same in every state; enter your MAGI below and the 2026 IRMAA surcharge for your tier is added automatically",
@@ -366,6 +392,14 @@ en:{
   ssColAge:"Claiming age", ssColPct:"% of PIA", ssColMo:"Monthly", ssColYr:"Annual",
   ssFraTag:"Full retirement age", ssMaxTag:"Maximum",
   ssNotes:["Applies to people born in 1960 or later; full retirement age (FRA) is 67.","Early claiming permanently reduces the benefit; there is no increase for delaying past 70.","Amounts are in today's dollars, before COLA adjustments; spousal and survivor benefits are not included, and benefits may be taxable.","Find your own PIA estimate in your ssa.gov account statement."],
+  infH:"Inflation Projection",
+  infYearLbl:"Target year",
+  infRateLbl:"Annual growth rate (%)",
+  infFactorPrefix:"Projection factor: × ",
+  infFactorMid:" (",
+  infFactorYears:" years)",
+  infTotalLbl:"Projected total (state & combination selected above)",
+  infNotes:["Simplified assumption: one growth rate for all premiums; IRMAA thresholds are not projected; actual growth differs by part.","For reference, Part B premiums have historically risen about 5–6% per year on average.","Deductibles are not projected; they remain current-year reference values.","This is a projection, not a forecast."],
   rulesH:"Switching Plans Without Underwriting",
   rulesDef:"<strong>What “unconditional” means:</strong> when you switch plans, the insurer <strong>cannot ask health questions and cannot deny you through medical underwriting</strong>. The biggest state-by-state differences are in Medigap — Part C and Part D already have federal no-underwriting switching windows (see section D).",
   rulesDisc:"Verified November 2026. State rules change frequently (several states added new rules in 2025–2026) — confirm with your state insurance department or SHIP (State Health Insurance Assistance Program) before acting.",
@@ -552,12 +586,7 @@ function buildStateOptions(){
 }
 function currentState(){ for(var i=0;i<STATES.length;i++) if(STATES[i][0]===sel.value) return STATES[i]; return STATES[26]; }
 
-function render(){
-  var t = T[LANG];
-  var s = currentState();
-  var combo = document.querySelector('input[name="combo"]:checked').value;
-  var ir = irmaaTier();
-  var bSur = ir.tier.b - PART_B;
+function computeItems(s, combo, ir, t, bSur){
   var items = [];
   items.push({key:"a", name:t.itemA, desc:t.itemAD, val:0});
   items.push({key:"b", name:t.itemB, desc: bSur>0 ? bDesc(ir) : t.itemBD, val:ir.tier.b});
@@ -565,6 +594,50 @@ function render(){
   if(combo==="full") items.push({key:"g", name:t.itemG, desc:itemGDesc(s), val:s[5]});
   if(combo==="ma") items.push({key:"c", name:t.itemC, desc:itemCDesc(s), val:s[4]});
   if(ir.tier.d>0 && combo!=="orig") items.push({key:"irmaa", name:t.itemIRMAA, desc:t.itemIRMAAD, val:ir.tier.d});
+  return items;
+}
+function renderProjection(){
+  var t = T[LANG];
+  var s = currentState();
+  var combo = document.querySelector('input[name="combo"]:checked').value;
+  var ir = irmaaTier();
+  var bSur = ir.tier.b - PART_B;
+  var items = computeItems(s, combo, ir, t, bSur);
+  var target = parseInt(el("infYear").value, 10);
+  if(isNaN(target)) target = 2026;
+  var rate = parseFloat(el("infRate").value);
+  if(isNaN(rate) || rate < 0) rate = 0;
+  var years = Math.max(0, target - 2026);
+  var factor = Math.pow(1 + rate/100, years);
+  el("infFactor").textContent = t.infFactorPrefix + factor.toFixed(3) + t.infFactorMid + years + t.infFactorYears;
+  var rows = el("infRows"); rows.innerHTML = "";
+  var total = 0;
+  items.forEach(function(it){
+    var tr = document.createElement("tr");
+    var nameTd = document.createElement("td");
+    nameTd.innerHTML = "<strong></strong><br><span class='muted'></span>";
+    nameTd.querySelector("strong").textContent = it.name;
+    nameTd.querySelector("span").textContent = it.desc;
+    var mo = document.createElement("td"); mo.className = "amt";
+    var yr = document.createElement("td"); yr.className = "amt";
+    if(it.val === null){ mo.textContent = t.noData; yr.textContent = "—"; }
+    else {
+      var pv = it.val * factor;
+      total += pv;
+      mo.textContent = fmt(pv); yr.textContent = fmt(pv*12);
+    }
+    tr.appendChild(nameTd); tr.appendChild(mo); tr.appendChild(yr); rows.appendChild(tr);
+  });
+  el("infTotalMo").textContent = fmt(total);
+  el("infTotalYr").textContent = fmt(total*12);
+}
+function render(){
+  var t = T[LANG];
+  var s = currentState();
+  var combo = document.querySelector('input[name="combo"]:checked').value;
+  var ir = irmaaTier();
+  var bSur = ir.tier.b - PART_B;
+  var items = computeItems(s, combo, ir, t, bSur);
   var total=0, hasNull=false;
   var rows=el("rows"); rows.innerHTML="";
   items.forEach(function(it){
@@ -596,6 +669,7 @@ function render(){
   else if(bSur===0 && ir.tier.d===0){ tb.textContent=t.tierStandard; }
   else { tb.textContent = t.tierPrefix + IRMAA[ir.status].label + " " + ir.tier.range; }
   renderSS();
+  renderProjection();
 }
 
 function ruleItem(code, name, desc){
@@ -698,6 +772,19 @@ function applyLang(){
     var tx=document.createElement("span"); tx.textContent=n;
     li.appendChild(d); li.appendChild(tx); snEl.appendChild(li);
   });
+  el("infH").textContent=t.infH;
+  el("infYearLbl").textContent=t.infYearLbl;
+  el("infRateLbl").textContent=t.infRateLbl;
+  el("infColItem").textContent=t.colItem; el("infColMo").textContent=t.colMo; el("infColYr").textContent=t.colYr;
+  el("infTotalLbl").textContent=t.infTotalLbl;
+  el("infPerMo").textContent=t.perMo; el("infPerYrLbl").textContent=t.perYr;
+  var infEl=el("infNotes"); infEl.innerHTML="";
+  t.infNotes.forEach(function(n){
+    var li=document.createElement("li");
+    var d=document.createElement("span"); d.className="dot";
+    var tx=document.createElement("span"); tx.textContent=n;
+    li.appendChild(d); li.appendChild(tx); infEl.appendChild(li);
+  });
   el("rulesH").textContent=t.rulesH;
   el("rulesDef").innerHTML=t.rulesDef;
   el("rulesDisc").textContent=t.rulesDisc;
@@ -723,6 +810,8 @@ sel.addEventListener("change", render);
 el("filingSel").addEventListener("change", render);
 el("magiInput").addEventListener("input", render);
 el("piaInput").addEventListener("input", renderSS);
+el("infYear").addEventListener("input", renderProjection);
+el("infRate").addEventListener("input", renderProjection);
 el("comboBox").addEventListener("change", render);
 el("langSel").addEventListener("change", function(){ LANG = this.value; applyLang(); });
 sel.value="MA";
